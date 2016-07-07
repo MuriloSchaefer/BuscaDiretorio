@@ -54,37 +54,37 @@ public class Consumidor implements Runnable{
     
     public File consome() throws InterruptedException{
         File arquivo;
+        empty.acquire();
         mutex.acquire();
         /*System.out.println("mutex: "+ mutex.availablePermits());
         System.out.println("empty: "+ empty.availablePermits());
         System.out.println("full: "+ full.availablePermits());*/
-        System.out.println(Thread.currentThread().getName() + "\toutput: "+ output);
-        full.acquire();
+        //System.out.println(Thread.currentThread().getName() + "\toutput: "+ output);
         arquivo = buffer.getArquivos().get(output);
         buffer.setArquivo(output, null);
-        System.out.println(Thread.currentThread().getName() + "\tbuffer: "+buffer.toString());
+       // System.out.println(Thread.currentThread().getName() + "\tbuffer: "+buffer.toString());
         output = (output+1)%buffer.getTamanho();
-        empty.release();
         /*System.out.println("mutex: "+ mutex.availablePermits());
         System.out.println("empty: "+ empty.availablePermits());
         System.out.println("full: "+ full.availablePermits());
         System.out.println("output: "+ output);*/
         mutex.release();
+        full.release();
         return arquivo;
     }
 
     @Override
     public void run() {
         File arquivo;
-        while(buffer.getNumProdutores()>0 || full.availablePermits() > 0){
-            while(full.availablePermits() == 0){
+        while(buffer.getNumProdutores()>0 || empty.availablePermits() > 0){
+            while(empty.availablePermits() == 0){
                 try {
-                    System.out.println(Thread.currentThread().getName() + "\tconsumidor dormiu ");
+                    //System.out.println(Thread.currentThread().getName() + "\tconsumidor dormiu ");
                     Thread.sleep(10); //adormece a thread
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                System.out.println(Thread.currentThread().getName() + "\tacordou");
+                //System.out.println(Thread.currentThread().getName() + "\tacordou");
             }
             try{
                 //System.out.println(buffer.toString());
@@ -103,7 +103,7 @@ public class Consumidor implements Runnable{
             
         }
         buffer.removeConsumidor(); 
-        System.out.println(Thread.currentThread().getName() + "\tconsumidor se matou");
+        //System.out.println(Thread.currentThread().getName() + "\tconsumidor se matou");
     }
     
 }

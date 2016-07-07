@@ -54,11 +54,11 @@ public class BuscaDiretorio {
     public static void main(String[] args) throws InterruptedException {
         // TODO code application logic here
         buffer = new Buffer(tam);
-        empty = new Semaphore(tam);
-        full = new Semaphore(0);
+        empty = new Semaphore(0);
+        full = new Semaphore(tam);
         mutex = new Semaphore(1);
        // Reminder reminder = new Reminder(1);
-        palavra = "bololo";
+        palavra = "produto";
         encontrados = new ArrayList<>();
         long tempoInicial = 0;
         

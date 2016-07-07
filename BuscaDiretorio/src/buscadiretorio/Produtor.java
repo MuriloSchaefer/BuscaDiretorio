@@ -48,15 +48,15 @@ public class Produtor implements Runnable {
     
     public void produzir(File arquivo) throws InterruptedException{
         //System.out.println("Vou tentar coloca-lo agora, talvez.");
+        full.acquire();
         mutex.acquire();
         //System.out.println("vou conseguir! :D");
-        empty.acquire();
         //System.out.println("tofu");
         buffer.setArquivo(input, arquivo);
         input = (input+1)%buffer.getTamanho();
         //System.out.println("esta tudo no lugar.");
-        full.release();
         mutex.release();
+        empty.release();
         //System.out.println("pode voltar a trabalhar.");
     }
 
@@ -77,7 +77,7 @@ public class Produtor implements Runnable {
                     Thread produtor = new Thread(new Produtor(arquivo, buffer, empty, full, mutex));
                     produtor.run();
                 } else {
-                    while(empty.availablePermits() == 0){
+                    while(full.availablePermits() == 0){
                         //System.out.println("to cheio");
                         try {
                             //Thread.yield();
