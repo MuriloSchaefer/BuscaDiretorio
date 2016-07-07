@@ -43,6 +43,7 @@ public class Consumidor implements Runnable{
     
     public boolean pesquisa(File arquivo) throws FileNotFoundException{        
         Scanner scanner = new Scanner(arquivo);
+        System.out.println(Thread.currentThread().getName() + " pesquisando " + arquivo.getPath());
         while(scanner.hasNext()){
             String leitura = scanner.next();
             if(palavra.equalsIgnoreCase(leitura)){
@@ -59,10 +60,10 @@ public class Consumidor implements Runnable{
         /*System.out.println("mutex: "+ mutex.availablePermits());
         System.out.println("empty: "+ empty.availablePermits());
         System.out.println("full: "+ full.availablePermits());*/
-        //System.out.println(Thread.currentThread().getName() + "\toutput: "+ output);
+        System.out.println(Thread.currentThread().getName() + "\toutput: "+ output);
         arquivo = buffer.getArquivos().get(output);
         buffer.setArquivo(output, null);
-       // System.out.println(Thread.currentThread().getName() + "\tbuffer: "+buffer.toString());
+        System.out.println(Thread.currentThread().getName() + "\tbuffer: "+buffer.toString());
         output = (output+1)%buffer.getTamanho();
         /*System.out.println("mutex: "+ mutex.availablePermits());
         System.out.println("empty: "+ empty.availablePermits());
@@ -72,15 +73,21 @@ public class Consumidor implements Runnable{
         full.release();
         return arquivo;
     }
+    
+    public synchronized File chamaConsome() throws InterruptedException{
+        File arquivo = null;
+        arquivo = consome();
+        return arquivo;
+    }
 
     @Override
     public void run() {
-        File arquivo;
+        File arquivo = null;
         while(buffer.getNumProdutores()>0 || empty.availablePermits() > 0){
-            while(empty.availablePermits() == 0){
+            while(empty.availablePermits() == 0 && buffer.getNumProdutores()>0){
                 try {
-                    //System.out.println(Thread.currentThread().getName() + "\tconsumidor dormiu ");
-                    Thread.sleep(10); //adormece a thread
+                    System.out.println(Thread.currentThread().getName() + "\tconsumidor dormiu ");
+                    Thread.sleep(1); //adormece a thread
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -88,12 +95,15 @@ public class Consumidor implements Runnable{
             }
             try{
                 //System.out.println(buffer.toString());
-                arquivo = consome();
-                if(pesquisa(arquivo)){
-                    System.out.println(Thread.currentThread().getName() + "\tencontrei neste arquivo: "+ arquivo.toPath());
-                    encontrados.add(arquivo);
-                } else {
-                    System.out.println(Thread.currentThread().getName() + "\tnão encontrei nada neste arquivo "+ arquivo.toPath());
+                if(empty.availablePermits() > 0)
+                    arquivo = chamaConsome();
+                if(arquivo != null){
+                    if(pesquisa(arquivo)){
+                        System.out.println(Thread.currentThread().getName() + "\tencontrei neste arquivo: "+ arquivo.toPath());
+                        encontrados.add(arquivo);
+                    } else {
+                        System.out.println(Thread.currentThread().getName() + "\tnão encontrei nada neste arquivo "+ arquivo.toPath());
+                    }
                 }
             }catch(FileNotFoundException e){
                 System.out.println(Thread.currentThread().getName() + "\tArquivo não encontrado");
@@ -103,7 +113,7 @@ public class Consumidor implements Runnable{
             
         }
         buffer.removeConsumidor(); 
-        //System.out.println(Thread.currentThread().getName() + "\tconsumidor se matou");
+        System.out.println(Thread.currentThread().getName() + "\tconsumidor se matou");
     }
     
 }

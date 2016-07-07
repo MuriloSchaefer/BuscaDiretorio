@@ -80,7 +80,7 @@ public class BuscaDiretorio {
             tempoInicial = System.currentTimeMillis();
             Thread produtor = new Thread(new Produtor(dir, buffer, empty, full, mutex));
             produtor.start();
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 1; i++) {
                 Thread consumidor = new Thread(new Consumidor(buffer, empty, full, mutex, palavra, encontrados));
                 consumidor.start();
             }
@@ -90,7 +90,7 @@ public class BuscaDiretorio {
             while(buffer.getNumConsumidores() != 0){
                 /*System.out.println("n Consumidores: "+ buffer.getNumConsumidores());
                 System.out.println("n Produtores: "+ buffer.getNumProdutores());*/
-                Thread.sleep(100);
+                Thread.sleep(1);
             }
             System.out.println("Encontrados: ");
             String saida = "";

@@ -50,7 +50,7 @@ public class Produtor implements Runnable {
         //System.out.println("Vou tentar coloca-lo agora, talvez.");
         full.acquire();
         mutex.acquire();
-        //System.out.println("vou conseguir! :D");
+        System.out.println("coloquei no buffer " + arquivo.getPath());
         //System.out.println("tofu");
         buffer.setArquivo(input, arquivo);
         input = (input+1)%buffer.getTamanho();
@@ -81,7 +81,7 @@ public class Produtor implements Runnable {
                         //System.out.println("to cheio");
                         try {
                             //Thread.yield();
-                            Thread.sleep(10);
+                            Thread.sleep(1);
                         } catch (InterruptedException ex) {
                             Logger.getLogger(Produtor.class.getName()).log(Level.SEVERE, null, ex);
                         }
