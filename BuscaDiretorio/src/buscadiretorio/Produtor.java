@@ -29,8 +29,8 @@ public class Produtor implements Runnable {
     private static Integer numProdutores, numConsumidores;
     
     
-    public Produtor(File dir, Buffer buffer, Semaphore empty, Semaphore full, Semaphore mutex, Integer numProdutores, Integer numConsumidores){
-        System.out.println("produtor se reproduziu");
+    public Produtor(File dir, Buffer buffer, Semaphore empty, Semaphore full, Semaphore mutex){
+        //System.out.println("produtor se reproduziu");
         File[] fileList = dir.listFiles();
         this.buffer = buffer;
         this.empty = empty;
@@ -40,18 +40,9 @@ public class Produtor implements Runnable {
         for(int i =0 ; i< fileList.length; i++){
             arquivos.add(fileList[i]);
         }
-        this.numProdutores = numProdutores+1;
         this.numConsumidores = numConsumidores;
-        
-    }
-    
-    public synchronized void wakeup(){
-        notifyAll();
-        System.out.println("notfyall prod");
-    }
-    public synchronized void sleep() throws InterruptedException{
-        System.out.println("wait prod");
-        wait();
+        this.numProdutores = numProdutores;
+        buffer.addProdutor();
         
     }
     
@@ -61,12 +52,11 @@ public class Produtor implements Runnable {
         //System.out.println("vou conseguir! :D");
         empty.acquire();
         //System.out.println("tofu");
-        buffer.addArquivo(input, arquivo);
+        buffer.setArquivo(input, arquivo);
         input = (input+1)%buffer.getTamanho();
         //System.out.println("esta tudo no lugar.");
         full.release();
         mutex.release();
-        wakeup();
         //System.out.println("pode voltar a trabalhar.");
     }
 
@@ -84,37 +74,31 @@ public class Produtor implements Runnable {
                 //System.out.println(arquivo.toString());
                 if(arquivo.isDirectory()){
                     //System.out.println("Novo produtor para a pastinha");
-                    Thread produtor = new Thread(new Produtor(arquivo, buffer, empty, full, mutex, numProdutores, numConsumidores));
+                    Thread produtor = new Thread(new Produtor(arquivo, buffer, empty, full, mutex));
                     produtor.run();
                 } else {
-                    //System.out.println("não é uma pastinha, vamos colocar ele no buffer");
-                    if(buffer.isFull()){
+                    while(empty.availablePermits() == 0){
+                        //System.out.println("to cheio");
                         try {
-                            //System.out.println("Buffer cheio, que dó");
-                            sleep();
+                            //Thread.yield();
+                            Thread.sleep(10);
                         } catch (InterruptedException ex) {
                             Logger.getLogger(Produtor.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } else{
-                        //System.out.println("tem um lugarzinho no buffer, vamos colocar la");
-                        try {
-                            produzir(arquivo);
-                        } catch (InterruptedException ex) {
-                            //System.out.println("Exception ao tentar parar a thread: "+ ex.getMessage());
-                        }
-                            
+                    } 
+                    try {
+                        produzir(arquivo);
+                    } catch (InterruptedException ex) {
+                        System.out.println(Thread.currentThread().getName() + "\tnao consegui produzir");
                     }
                 }
             }
         }
-        System.out.println(numProdutores);
-        try {
-            mutex.acquire();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Produtor.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        this.numProdutores -=1;
-        mutex.release();
+        buffer.removeProdutor();
+        /*System.out.println("Produtor morreu:");
+        System.out.println("num Produtores: "+ buffer.getNumProdutores());
+        System.out.println("num Consumidores: "+ buffer.getNumConsumidores());*/
+        
     }
     
 }

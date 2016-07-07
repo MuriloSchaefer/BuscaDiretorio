@@ -5,11 +5,10 @@
  */
 package buscadiretorio;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
@@ -27,28 +26,22 @@ public class Consumidor implements Runnable{
     private static String palavra;
     private static int output=0;
     private static Integer numProdutores, numConsumidores;
+    private static List<File> encontrados;
     
-    public Consumidor(Buffer buffer, Semaphore empty, Semaphore full, Semaphore mutex, String palavra, Integer numProdutores, Integer numConsumidores){
-        System.out.println("consumidor se reproduziu");
+    public Consumidor(Buffer buffer, Semaphore empty, Semaphore full, Semaphore mutex, String palavra, List<File> encontrados){
+        //System.out.println("consumidor se reproduziu");
         this.buffer = buffer;
         this.empty = empty;
         this.full = full;
         this.mutex = mutex;
         this.palavra = palavra;
         this.numProdutores = numProdutores;
-        this.numConsumidores = numConsumidores+1;
+        this.numConsumidores = numConsumidores;
+        this.encontrados = encontrados;
+        buffer.addConsumidor();
     }
     
-    public synchronized void wakeup(){
-        notifyAll();
-        System.out.println("notfyall cons");
-    }
-    public synchronized void sleep() throws InterruptedException{
-        System.out.println("wait cons");
-        wait();
-    }
-    public boolean pesquisa(File arquivo) throws FileNotFoundException{
-        String resultado = null;
+    public boolean pesquisa(File arquivo) throws FileNotFoundException{        
         Scanner scanner = new Scanner(arquivo);
         while(scanner.hasNext()){
             String leitura = scanner.next();
@@ -59,45 +52,58 @@ public class Consumidor implements Runnable{
         return false;
     }
     
-    
     public File consome() throws InterruptedException{
         File arquivo;
         mutex.acquire();
+        /*System.out.println("mutex: "+ mutex.availablePermits());
+        System.out.println("empty: "+ empty.availablePermits());
+        System.out.println("full: "+ full.availablePermits());*/
+        System.out.println(Thread.currentThread().getName() + "\toutput: "+ output);
         full.acquire();
         arquivo = buffer.getArquivos().get(output);
         buffer.setArquivo(output, null);
+        System.out.println(Thread.currentThread().getName() + "\tbuffer: "+buffer.toString());
         output = (output+1)%buffer.getTamanho();
         empty.release();
+        /*System.out.println("mutex: "+ mutex.availablePermits());
+        System.out.println("empty: "+ empty.availablePermits());
+        System.out.println("full: "+ full.availablePermits());
+        System.out.println("output: "+ output);*/
         mutex.release();
-        wakeup();
         return arquivo;
     }
 
     @Override
     public void run() {
         File arquivo;
-        while(this.numProdutores>0){
+        while(buffer.getNumProdutores()>0 || full.availablePermits() > 0){
             while(full.availablePermits() == 0){
                 try {
-                    sleep();
+                    System.out.println(Thread.currentThread().getName() + "\tconsumidor dormiu ");
+                    Thread.sleep(10); //adormece a thread
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                System.out.println(Thread.currentThread().getName() + "\tacordou");
             }
-            try {
+            try{
+                //System.out.println(buffer.toString());
                 arquivo = consome();
                 if(pesquisa(arquivo)){
-                    System.out.println("encontrei neste arquivo: "+ arquivo.toPath());
+                    System.out.println(Thread.currentThread().getName() + "\tencontrei neste arquivo: "+ arquivo.toPath());
+                    encontrados.add(arquivo);
                 } else {
-                    System.out.println("não encontrei nada neste arquivo "+ arquivo.toPath());
+                    System.out.println(Thread.currentThread().getName() + "\tnão encontrei nada neste arquivo "+ arquivo.toPath());
                 }
-            } catch (InterruptedException | FileNotFoundException ex) {
-                Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
+            }catch(FileNotFoundException e){
+                System.out.println(Thread.currentThread().getName() + "\tArquivo não encontrado");
+            } catch (InterruptedException ex) {
+                System.out.println(Thread.currentThread().getName() + "\tnão consumido");
             }
+            
         }
-        System.out.println(numProdutores);
-        //SINCRONIZAR
-        this.numConsumidores -=1;
+        buffer.removeConsumidor(); 
+        System.out.println(Thread.currentThread().getName() + "\tconsumidor se matou");
     }
     
 }
