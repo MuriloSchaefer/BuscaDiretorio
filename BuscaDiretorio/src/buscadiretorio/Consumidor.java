@@ -29,7 +29,6 @@ public class Consumidor implements Runnable{
     private static List<File> encontrados;
     
     public Consumidor(Buffer buffer, Semaphore empty, Semaphore full, Semaphore mutex, String palavra, List<File> encontrados){
-        //System.out.println("consumidor se reproduziu");
         this.buffer = buffer;
         this.empty = empty;
         this.full = full;
@@ -43,7 +42,6 @@ public class Consumidor implements Runnable{
     
     public boolean pesquisa(File arquivo) throws FileNotFoundException{        
         Scanner scanner = new Scanner(arquivo);
-        System.out.println(Thread.currentThread().getName() + " pesquisando " + arquivo.getPath());
         while(scanner.hasNext()){
             String leitura = scanner.next();
             if(palavra.equalsIgnoreCase(leitura)){
@@ -57,18 +55,9 @@ public class Consumidor implements Runnable{
         File arquivo;
         empty.acquire();
         mutex.acquire();
-        /*System.out.println("mutex: "+ mutex.availablePermits());
-        System.out.println("empty: "+ empty.availablePermits());
-        System.out.println("full: "+ full.availablePermits());*/
-        System.out.println(Thread.currentThread().getName() + "\toutput: "+ output);
         arquivo = buffer.getArquivos().get(output);
         buffer.setArquivo(output, null);
-        System.out.println(Thread.currentThread().getName() + "\tbuffer: "+buffer.toString());
         output = (output+1)%buffer.getTamanho();
-        /*System.out.println("mutex: "+ mutex.availablePermits());
-        System.out.println("empty: "+ empty.availablePermits());
-        System.out.println("full: "+ full.availablePermits());
-        System.out.println("output: "+ output);*/
         mutex.release();
         full.release();
         return arquivo;
@@ -86,34 +75,30 @@ public class Consumidor implements Runnable{
         while(buffer.getNumProdutores()>0 || empty.availablePermits() > 0){
             while(empty.availablePermits() == 0 && buffer.getNumProdutores()>0){
                 try {
-                    System.out.println(Thread.currentThread().getName() + "\tconsumidor dormiu ");
                     Thread.sleep(1); //adormece a thread
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                //System.out.println(Thread.currentThread().getName() + "\tacordou");
             }
             try{
-                //System.out.println(buffer.toString());
                 if(empty.availablePermits() > 0)
                     arquivo = chamaConsome();
                 if(arquivo != null){
                     if(pesquisa(arquivo)){
-                        System.out.println(Thread.currentThread().getName() + "\tencontrei neste arquivo: "+ arquivo.toPath());
+                        //System.out.println(Thread.currentThread().getName() + "\tencontrei neste arquivo: "+ arquivo.toPath());
                         encontrados.add(arquivo);
                     } else {
-                        System.out.println(Thread.currentThread().getName() + "\tnão encontrei nada neste arquivo "+ arquivo.toPath());
+                        //System.out.println(Thread.currentThread().getName() + "\tnão encontrei nada neste arquivo "+ arquivo.toPath());
                     }
                 }
             }catch(FileNotFoundException e){
-                System.out.println(Thread.currentThread().getName() + "\tArquivo não encontrado");
+                System.out.println(Thread.currentThread().getName() + "\tArquivo não encontrado.");
             } catch (InterruptedException ex) {
-                System.out.println(Thread.currentThread().getName() + "\tnão consumido");
+                System.out.println(Thread.currentThread().getName() + "\tNão consumido.");
             }
             
         }
         buffer.removeConsumidor(); 
-        System.out.println(Thread.currentThread().getName() + "\tconsumidor se matou");
     }
     
 }
