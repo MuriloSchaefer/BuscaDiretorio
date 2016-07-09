@@ -7,11 +7,8 @@ package buscadiretorio;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 /**
@@ -36,8 +33,8 @@ public class Produtor implements Runnable {
         this.full = full;
         this.mutex = mutex;
         arquivos = new ArrayList();
-        for(int i =0 ; i< fileList.length; i++){
-            arquivos.add(fileList[i]);
+        for (File file : fileList) {
+            arquivos.add(file);
         }
         this.numConsumidores = numConsumidores;
         this.numProdutores = numProdutores;
@@ -65,11 +62,7 @@ public class Produtor implements Runnable {
                     produtor.run();
                 } else {
                     while(full.availablePermits() == 0){
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Produtor.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        Thread.yield();
                     } 
                     try {
                         produzir(arquivo);

@@ -39,14 +39,14 @@ public class BuscaDiretorio {
         encontrados = new ArrayList<>();
         long tempoInicial = 0;
         long tempoExecucao = 0;
-        int nCons = 6;
+        int nCons = 3;
         File dir = null;
         
         if(args.length>0){
             palavra = args[0];
             dir = new File(args[1]);
             if(args.length > 2)
-                nCons = Integer.valueOf(args[2]);
+            nCons = Integer.valueOf(args[2]);
         } else{
             //abre a busca do diretorio
             JFileChooser fc = new JFileChooser();
@@ -69,7 +69,7 @@ public class BuscaDiretorio {
             
             System.out.println("Buscando...");
             while(buffer.getNumConsumidores() != 0){
-                Thread.sleep(1);
+                Thread.yield();
             }
             tempoExecucao = System.currentTimeMillis() - tempoInicial;
             System.out.println("Encontrados: ");
