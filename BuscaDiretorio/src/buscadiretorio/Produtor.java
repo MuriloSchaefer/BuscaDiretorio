@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -64,7 +66,11 @@ public class Produtor implements Runnable {
                     produtor.run();
                 } else {
                     while(full.availablePermits() == 0){
-                        Thread.yield();
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Produtor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     } 
                     try {
                         produzir(arquivo);

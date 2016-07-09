@@ -9,10 +9,7 @@ package buscadiretorio;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import javax.swing.JFileChooser;
 import java.util.concurrent.Semaphore;
 /**
@@ -69,19 +66,18 @@ public class BuscaDiretorio {
                 consumidor.start();
             }
             
-            System.out.println("Buscando...");
             while(buffer.getNumConsumidores() != 0){
-                Thread.yield();
+                Thread.sleep(1);
             }
             tempoExecucao = System.currentTimeMillis() - tempoInicial;
-            System.out.println("Encontrados: ");
+            /*System.out.println("Encontrados: ");
             String saida = "";
             for (File arquivo : encontrados) {
                 saida += "\n\t"+ arquivo.getPath();
             }
-            System.out.println(saida);
+            System.out.println(saida);*/
         }
-        System.out.println("Tempo de execucao: "+ tempoExecucao + " ms");
+        System.out.println("Qtd Threads consumidoras: "+ nCons + " Tempo execucao: "+ tempoExecucao+ " ms");
     }
     
 }

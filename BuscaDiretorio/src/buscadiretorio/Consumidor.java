@@ -12,6 +12,8 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -73,7 +75,11 @@ public class Consumidor implements Runnable{
         File arquivo = null;
         while(buffer.getNumProdutores()>0 || empty.availablePermits() > 0){
             while(empty.availablePermits() == 0 && buffer.getNumProdutores()>0){
-                Thread.yield(); //adormece a thread
+                try {
+                    Thread.sleep(1); //adormece a thread
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             try{
                 if(empty.availablePermits() > 0)
