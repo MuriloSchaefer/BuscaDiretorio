@@ -64,14 +64,11 @@ public class Consumidor implements Runnable{
 
     @Override
     public void run() {
+        Thread.currentThread().setName("cons"+buffer.getNumConsumidores().toString());
         File arquivo = null;
         while(buffer.getNumProdutores()>0 || empty.availablePermits() > 0){
             while(empty.availablePermits() == 0 && buffer.getNumProdutores()>0){
-                try {
-                    Thread.sleep(1); //adormece a thread
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                Thread.yield(); //adormece a thread
             }
             try{
                 mutex.acquire();

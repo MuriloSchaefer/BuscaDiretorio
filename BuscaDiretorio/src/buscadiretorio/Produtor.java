@@ -57,6 +57,7 @@ public class Produtor implements Runnable {
 
     @Override
     public void run() {
+        Thread.currentThread().setName("prod"+buffer.getNumProdutores().toString());
         if (arquivos != null){
             for(int i = 0; i<arquivos.size(); i++){ //percorre lista de arquivos daquele diretorio
                 
@@ -66,11 +67,7 @@ public class Produtor implements Runnable {
                     produtor.run();
                 } else {
                     while(full.availablePermits() == 0){
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Produtor.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        Thread.yield();
                     } 
                     try {
                         produzir(arquivo);

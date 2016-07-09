@@ -38,7 +38,7 @@ public class BuscaDiretorio {
         encontrados = new ArrayList<>();
         long tempoInicial = 0;
         long tempoExecucao = 0;
-        int nCons = 3;
+        int nCons = 1;
         File dir = null;
         
         if(args.length>0){
@@ -67,7 +67,7 @@ public class BuscaDiretorio {
             }
             
             while(buffer.getNumConsumidores() != 0){
-                Thread.sleep(1);
+                Thread.yield();
             }
             tempoExecucao = System.currentTimeMillis() - tempoInicial;
             /*System.out.println("Encontrados: ");
