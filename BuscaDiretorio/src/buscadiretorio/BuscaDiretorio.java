@@ -55,7 +55,7 @@ public class BuscaDiretorio {
                 dir = fc.getSelectedFile();
             }
         }
-        //System.out.println(dir.list());
+        
         if(dir.exists()){
             tempoInicial = System.currentTimeMillis();
             Thread produtor = new Thread(new Produtor(dir, buffer, empty, full, mutex));

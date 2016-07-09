@@ -55,18 +55,10 @@ public class Consumidor implements Runnable{
     public File consome() throws InterruptedException{
         File arquivo;
         empty.acquire();
-        mutex.acquire();
         arquivo = buffer.getArquivos().get(output);
         buffer.setArquivo(output, null);
         output = (output+1)%buffer.getTamanho();
-        mutex.release();
         full.release();
-        return arquivo;
-    }
-    
-    public synchronized File chamaConsome() throws InterruptedException{
-        File arquivo;
-        arquivo = consome();
         return arquivo;
     }
 
@@ -82,14 +74,15 @@ public class Consumidor implements Runnable{
                 }
             }
             try{
-                if(empty.availablePermits() > 0)
-                    arquivo = chamaConsome();
+                mutex.acquire();
+                if(empty.availablePermits() > 0){
+                    arquivo = consome();
+                }
+                mutex.release();
                 if(arquivo != null){
                     if(pesquisa(arquivo)){
-                        //System.out.println(Thread.currentThread().getName() + "\tencontrei neste arquivo: "+ arquivo.toPath());
                         encontrados.add(arquivo);
                     } else {
-                        //System.out.println(Thread.currentThread().getName() + "\tnão encontrei nada neste arquivo "+ arquivo.toPath());
                     }
                 }
             }catch(FileNotFoundException e){
