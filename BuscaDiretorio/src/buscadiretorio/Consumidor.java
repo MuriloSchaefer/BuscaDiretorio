@@ -26,7 +26,6 @@ public class Consumidor implements Runnable{
     private Semaphore mutex;
     private static String palavra;
     private static int output=0;
-    private static Integer numProdutores, numConsumidores;
     private static List<File> encontrados;
     
     public Consumidor(Buffer buffer, Semaphore empty, Semaphore full, Semaphore mutex, String palavra, List<File> encontrados){
@@ -35,8 +34,6 @@ public class Consumidor implements Runnable{
         this.full = full;
         this.mutex = mutex;
         this.palavra = palavra;
-        this.numProdutores = numProdutores;
-        this.numConsumidores = numConsumidores;
         this.encontrados = encontrados;
         buffer.addConsumidor();
     }
@@ -68,7 +65,11 @@ public class Consumidor implements Runnable{
         File arquivo = null;
         while(buffer.getNumProdutores()>0 || empty.availablePermits() > 0){
             while(empty.availablePermits() == 0 && buffer.getNumProdutores()>0){
-                Thread.yield(); //adormece a thread
+                try {
+                    Thread.sleep(1); //adormece a thread
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Consumidor.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             try{
                 mutex.acquire();

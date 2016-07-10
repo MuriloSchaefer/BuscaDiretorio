@@ -8,7 +8,7 @@ package buscadiretorio;
 
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
@@ -21,28 +21,45 @@ import java.util.logging.Logger;
  */
 public class Produtor implements Runnable {
     private List<File> pesquisados;
-    private List<File> arquivos;
+    private File dir;
     private Buffer buffer;
     private Semaphore empty;
     private Semaphore full;
     private Semaphore mutex;
     private static int input = 0;
-    private static Integer numProdutores, numConsumidores;
     
     
     public Produtor(File dir, Buffer buffer, Semaphore empty, Semaphore full, Semaphore mutex){
-        File[] fileList = dir.listFiles();
         this.buffer = buffer;
         this.empty = empty;
         this.full = full;
         this.mutex = mutex;
-        arquivos = new ArrayList();
-        for (File file : fileList) {
-            arquivos.add(file);
-        }
-        this.numConsumidores = numConsumidores;
-        this.numProdutores = numProdutores;
+        this.dir = dir;
         buffer.addProdutor();
+        
+    }
+    
+    public void percorreDiretorio(File diretorio) throws FileNotFoundException, InterruptedException{
+        
+        if(diretorio == null){
+            return;
+        }
+        
+        File[] fileList = diretorio.listFiles();    
+        for (File arquivo : fileList) {
+            if(arquivo.isDirectory()){
+                percorreDiretorio(arquivo);
+            }else{
+                while(full.availablePermits() == 0){
+                    Thread.sleep(1);
+                } 
+                try {
+                    produzir(arquivo);
+                } catch (InterruptedException ex) {
+                    System.out.println(Thread.currentThread().getName() + "\tnao consegui produzir");
+                }
+            }
+        }
         
     }
     
@@ -58,24 +75,10 @@ public class Produtor implements Runnable {
     @Override
     public void run() {
         Thread.currentThread().setName("prod"+buffer.getNumProdutores().toString());
-        if (arquivos != null){
-            for(int i = 0; i<arquivos.size(); i++){ //percorre lista de arquivos daquele diretorio
-                
-                File arquivo = arquivos.get(i);
-                if(arquivo.isDirectory()){
-                    Thread produtor = new Thread(new Produtor(arquivo, buffer, empty, full, mutex));
-                    produtor.run();
-                } else {
-                    while(full.availablePermits() == 0){
-                        Thread.yield();
-                    } 
-                    try {
-                        produzir(arquivo);
-                    } catch (InterruptedException ex) {
-                        System.out.println(Thread.currentThread().getName() + "\tnao consegui produzir");
-                    }
-                }
-            }
+        try {
+            percorreDiretorio(dir);
+        } catch (FileNotFoundException | InterruptedException ex) {
+            Logger.getLogger(Produtor.class.getName()).log(Level.SEVERE, null, ex);
         }
         buffer.removeProdutor();
     }

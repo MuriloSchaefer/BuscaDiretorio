@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
 
 public class BuscaDiretorio {
 
-    private static final int tam = 5; // tamanho do buffer
+    private static int tam = 5; // tamanho do buffer
     private static Buffer buffer;
     private static Semaphore empty;
     private static Semaphore full;
@@ -30,10 +30,6 @@ public class BuscaDiretorio {
     
     public static void main(String[] args) throws InterruptedException {
 
-        buffer = new Buffer(tam);
-        empty = new Semaphore(0);
-        full = new Semaphore(tam);
-        mutex = new Semaphore(1);
         palavra = "produto";
         encontrados = new ArrayList<>();
         long tempoInicial = 0;
@@ -44,8 +40,9 @@ public class BuscaDiretorio {
         if(args.length>0){
             palavra = args[0];
             dir = new File(args[1]);
-            if(args.length > 2)
-            nCons = Integer.valueOf(args[2]);
+            tam = Integer.valueOf(args[2]);
+            if(args.length > 3)
+                nCons = Integer.valueOf(args[3]);
         } else{
             //abre a busca do diretorio
             JFileChooser fc = new JFileChooser();
@@ -55,6 +52,11 @@ public class BuscaDiretorio {
                 dir = fc.getSelectedFile();
             }
         }
+        
+        buffer = new Buffer(tam);
+        empty = new Semaphore(0);
+        full = new Semaphore(tam);
+        mutex = new Semaphore(1);
         
         if(dir.exists()){
             tempoInicial = System.currentTimeMillis();
@@ -67,7 +69,7 @@ public class BuscaDiretorio {
             }
             
             while(buffer.getNumConsumidores() != 0){
-                Thread.yield();
+                Thread.sleep(1);
             }
             tempoExecucao = System.currentTimeMillis() - tempoInicial;
             /*System.out.println("Encontrados: ");
